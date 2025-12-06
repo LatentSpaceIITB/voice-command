@@ -8,6 +8,10 @@ release to process. Supports Google Workspace and macOS system control.
 Features hybrid Fast Lane / Slow Lane architecture for optimal latency:
 - Fast Lane: Cloud STT + semantic routing + local execution (~1s)
 - Slow Lane: Cloud STT + Claude parsing + API execution (~2-3s)
+
+Visual HUD mode: "Show, Don't Tell"
+- Short confirmations: TTS only ("Done", "Timer set")
+- Long content: Visual HUD with streaming (summaries, code, explanations)
 """
 
 import os
@@ -29,6 +33,11 @@ from config import FAST_LANE_CONFIDENCE, FAST_LANE_FALLBACK_TO_CLOUD
 
 # Context capture for "The Now" commands
 from context_capture import ContextCapture
+
+# Visual HUD components (Show, Don't Tell)
+from hud_server import get_hud_server, HUDServer
+from response_router import ResponseRouter, OutputMode
+from streaming_handler import StreamingHandler
 
 class VoiceCommandApp:
     """Main application orchestrating all components."""
@@ -57,6 +66,13 @@ class VoiceCommandApp:
         self.parser = IntentParser()
         self.router = CommandRouter()
 
+        # Visual HUD: "Show, Don't Tell"
+        print("Setting up Visual HUD...")
+        self.hud_server = get_hud_server()
+        self.hud_server.start()
+        self.response_router = ResponseRouter()
+        self.streaming_handler = StreamingHandler(hud_server=self.hud_server)
+
         # Output
         self.tts = TTSClient(model="tts-1", voice="alloy")
 
@@ -75,6 +91,7 @@ class VoiceCommandApp:
             print("✓ Fast Lane: ENABLED (semantic router + local execution)")
         else:
             print("✗ Fast Lane: DISABLED (using Claude for all commands)")
+        print("✓ Visual HUD: ENABLED (WebSocket on port 8765)")
 
     def _on_key_press(self):
         """Called when trigger key is pressed."""
@@ -211,12 +228,49 @@ class VoiceCommandApp:
             self.tts.speak(response)
 
     def _process_contextual_command(self, text: str, context, route_result) -> bool:
-        """Process a contextual command with captured context."""
+        """Process a contextual command with captured context.
+
+        Uses Visual HUD for long responses (streaming), TTS for short confirmations.
+        """
+        action = route_result.action
+
+        # Check if HUD is connected - use visual streaming if available
+        if self.hud_server.is_connected():
+            print(f"📺 Streaming to Visual HUD...")
+
+            # Short TTS announcement
+            announcement = self._get_contextual_announcement(action)
+            if announcement:
+                self.tts.speak(announcement)
+
+            # Stream to HUD
+            try:
+                result_text = self.streaming_handler.stream_contextual(
+                    action=action,
+                    context_content=context.content,
+                    context_app=context.app_name,
+                    context_is_image=context.is_image,
+                    image_data=context.content if context.is_image else None
+                )
+                print(f"\n✨ Response streamed to HUD ({len(result_text)} chars)\n")
+                feedback.play_success()
+                return True
+
+            except Exception as e:
+                print(f"❌ HUD streaming error: {e}")
+                self.hud_server.show_error(str(e))
+                feedback.play_error()
+                return False
+
+        # Fallback to TTS-only mode (no HUD connected)
+        print(f"🔊 HUD not connected, using TTS fallback...")
+        return self._process_contextual_tts_fallback(text, context, route_result)
+
+    def _process_contextual_tts_fallback(self, text: str, context, route_result) -> bool:
+        """TTS fallback when HUD is not connected."""
         from anthropic import Anthropic
 
         client = Anthropic()
-
-        # Determine the action type
         action = route_result.action
 
         # Build the prompt based on action
@@ -278,10 +332,21 @@ class VoiceCommandApp:
 
         print(f"\n✨ Response:\n{result_text}\n")
 
-        # Speak the response
+        # Speak the response (for TTS fallback)
         self.tts.speak(result_text)
 
         return True
+
+    def _get_contextual_announcement(self, action: str) -> str:
+        """Get short TTS announcement for contextual actions (before HUD shows)."""
+        announcements = {
+            "contextual_explain": "Here's the explanation.",
+            "contextual_summarize": "Here's the summary.",
+            "contextual_reply": "Here's a draft reply.",
+            "contextual_improve": "Here's the improved version.",
+            "contextual_fix": "Here's the fix.",
+        }
+        return announcements.get(action, "Here you go.")
 
     def _generate_fast_response(self, route_result) -> str:
         """Generate spoken response for Fast Lane actions."""
@@ -404,19 +469,24 @@ class VoiceCommandApp:
         print("=" * 60)
         print()
         print("Hold Right Command (⌘) key and speak your command.")
-        print("Release to process. I'll speak the response back!")
+        print("Release to process.")
         print()
-        print("🚀 FAST LANE (instant, <400ms):")
+        print("🚀 FAST LANE (instant, TTS confirmation):")
         print("  'Open Chrome' / 'Close Spotify' / 'Switch to Finder'")
         print("  'Mute' / 'Volume up' / 'Pause' / 'Next song'")
         print("  'Dark mode' / 'Screenshot' / 'Lock screen'")
         print("  'Snap left' / 'Fullscreen' / 'Maximize'")
         print("  'Timer for 5 minutes'")
         print()
-        print("🐢 SLOW LANE (cloud, ~2-3s):")
+        print("📺 VISUAL HUD (streaming display):")
+        print("  'Explain this' / 'Summarize this' / 'Fix this error'")
+        print("  'Draft a reply' / 'Improve this text'")
+        print("  → Responses stream to frosted-glass HUD panel")
+        print("  → Copy/Insert buttons for quick actions")
+        print()
+        print("🐢 SLOW LANE (cloud APIs):")
         print("  'Set calendar to Navyansh tomorrow 8pm'")
         print("  'Send email to Suraj about project update'")
-        print("  'Remind me to call client at 3pm'")
         print("  'Create Notion page called Weekly Review'")
         print()
         print("Press Ctrl+C to exit.")
@@ -431,6 +501,7 @@ class VoiceCommandApp:
         except KeyboardInterrupt:
             print("\n\nShutting down...")
             self.listener.stop()
+            self.hud_server.stop()
             print("Goodbye!")
 
 
