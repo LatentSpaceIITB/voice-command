@@ -1,0 +1,5 @@
+# Ignore actual secret files
+.env
+.env.local
+.env.*
+!.env.example  # allow only example file
