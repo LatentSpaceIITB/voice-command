@@ -1,0 +1,337 @@
+{
+    "version": "1.0",
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "thresholds": {
+        "fast_lane": 0.80,
+        "slow_lane": 0.70
+    },
+    "routes": {
+        "media_play_pause": {
+            "lane": "fast",
+            "action": "media_play_pause",
+            "utterances": [
+                "play", "pause", "play music", "pause music",
+                "play spotify", "pause spotify", "resume music",
+                "stop music", "play apple music", "resume",
+                "start music", "continue music"
+            ]
+        },
+        "media_next": {
+            "lane": "fast",
+            "action": "media_next",
+            "utterances": [
+                "next", "next song", "next track", "skip",
+                "skip song", "skip track", "play next",
+                "forward", "skip this"
+            ]
+        },
+        "media_previous": {
+            "lane": "fast",
+            "action": "media_previous",
+            "utterances": [
+                "previous", "previous song", "previous track",
+                "go back", "last song", "play previous",
+                "back", "replay"
+            ]
+        },
+        "volume_up": {
+            "lane": "fast",
+            "action": "volume_up",
+            "utterances": [
+                "volume up", "louder", "turn up volume",
+                "increase volume", "raise volume", "turn it up",
+                "make it louder", "more volume"
+            ]
+        },
+        "volume_down": {
+            "lane": "fast",
+            "action": "volume_down",
+            "utterances": [
+                "volume down", "quieter", "turn down volume",
+                "decrease volume", "lower volume", "turn it down",
+                "make it quieter", "less volume"
+            ]
+        },
+        "volume_mute": {
+            "lane": "fast",
+            "action": "volume_mute",
+            "utterances": [
+                "mute", "mute volume", "silence", "mute sound",
+                "shut up", "quiet", "mute audio", "sound off"
+            ]
+        },
+        "volume_unmute": {
+            "lane": "fast",
+            "action": "volume_unmute",
+            "utterances": [
+                "unmute", "unmute volume", "sound on",
+                "turn on sound", "unmute audio"
+            ]
+        },
+        "lock_screen": {
+            "lane": "fast",
+            "action": "lock_screen",
+            "utterances": [
+                "lock screen", "lock computer", "lock mac",
+                "lock my computer", "lock the screen",
+                "lock", "secure screen"
+            ]
+        },
+        "sleep_display": {
+            "lane": "fast",
+            "action": "sleep_display",
+            "utterances": [
+                "sleep display", "turn off screen", "display off",
+                "turn off display", "screen off", "sleep screen",
+                "display sleep", "turn off monitor"
+            ]
+        },
+        "screenshot": {
+            "lane": "fast",
+            "action": "screenshot",
+            "utterances": [
+                "screenshot", "take screenshot", "capture screen",
+                "screen capture", "take a screenshot",
+                "grab screen", "screen shot"
+            ]
+        },
+        "screenshot_selection": {
+            "lane": "fast",
+            "action": "screenshot_selection",
+            "utterances": [
+                "screenshot selection", "capture selection",
+                "screenshot area", "select screenshot",
+                "partial screenshot", "screenshot region"
+            ]
+        },
+        "wifi_on": {
+            "lane": "fast",
+            "action": "wifi_on",
+            "utterances": [
+                "wifi on", "turn on wifi", "enable wifi",
+                "connect wifi", "turn wifi on", "wifi connect",
+                "enable wireless"
+            ]
+        },
+        "wifi_off": {
+            "lane": "fast",
+            "action": "wifi_off",
+            "utterances": [
+                "wifi off", "turn off wifi", "disable wifi",
+                "disconnect wifi", "turn wifi off", "wifi disconnect",
+                "disable wireless"
+            ]
+        },
+        "dnd_on": {
+            "lane": "fast",
+            "action": "dnd_on",
+            "utterances": [
+                "do not disturb", "do not disturb on", "dnd on",
+                "enable do not disturb", "focus mode",
+                "focus on", "turn on focus", "silence notifications"
+            ]
+        },
+        "dnd_off": {
+            "lane": "fast",
+            "action": "dnd_off",
+            "utterances": [
+                "do not disturb off", "dnd off",
+                "disable do not disturb", "turn off focus",
+                "focus off", "enable notifications"
+            ]
+        },
+        "dark_mode_on": {
+            "lane": "fast",
+            "action": "dark_mode_on",
+            "utterances": [
+                "dark mode", "dark mode on", "enable dark mode",
+                "turn on dark mode", "switch to dark",
+                "go dark", "dark theme"
+            ]
+        },
+        "dark_mode_off": {
+            "lane": "fast",
+            "action": "dark_mode_off",
+            "utterances": [
+                "light mode", "dark mode off", "disable dark mode",
+                "turn off dark mode", "switch to light",
+                "go light", "light theme"
+            ]
+        },
+        "window_maximize": {
+            "lane": "fast",
+            "action": "window_maximize",
+            "utterances": [
+                "maximize", "maximize window", "full size",
+                "make window bigger", "expand window",
+                "make it bigger", "zoom window"
+            ]
+        },
+        "window_minimize": {
+            "lane": "fast",
+            "action": "window_minimize",
+            "utterances": [
+                "minimize", "minimize window", "hide window",
+                "make window smaller", "dock it"
+            ]
+        },
+        "window_fullscreen": {
+            "lane": "fast",
+            "action": "window_fullscreen",
+            "utterances": [
+                "fullscreen", "full screen", "enter fullscreen",
+                "go fullscreen", "toggle fullscreen"
+            ]
+        },
+        "window_snap_left": {
+            "lane": "fast",
+            "action": "window_snap_left",
+            "utterances": [
+                "snap left", "window left", "move window left",
+                "tile left", "split left", "put this on the left",
+                "move left", "left half"
+            ]
+        },
+        "window_snap_right": {
+            "lane": "fast",
+            "action": "window_snap_right",
+            "utterances": [
+                "snap right", "window right", "move window right",
+                "tile right", "split right", "put this on the right",
+                "move right", "right half"
+            ]
+        },
+        "window_close": {
+            "lane": "fast",
+            "action": "window_close",
+            "utterances": [
+                "close window", "close this window", "close this"
+            ]
+        },
+        "open_app": {
+            "lane": "fast",
+            "action": "open_app",
+            "extract": "app_name",
+            "utterances": [
+                "open chrome", "open spotify", "open finder",
+                "open safari", "open terminal", "open vscode",
+                "launch chrome", "start spotify", "open notes",
+                "open slack", "open discord", "open whatsapp",
+                "open notion", "open figma", "open zoom",
+                "open music", "open messages", "open mail",
+                "open teams", "open calendar"
+            ]
+        },
+        "close_app": {
+            "lane": "fast",
+            "action": "close_app",
+            "extract": "app_name",
+            "utterances": [
+                "close chrome", "close spotify", "quit finder",
+                "quit safari", "close terminal", "quit vscode",
+                "exit chrome", "close slack", "quit discord",
+                "close whatsapp", "quit notion", "close zoom",
+                "kill chrome", "kill spotify"
+            ]
+        },
+        "switch_app": {
+            "lane": "fast",
+            "action": "switch_app",
+            "extract": "app_name",
+            "utterances": [
+                "switch to chrome", "switch to spotify", "go to finder",
+                "go to safari", "switch to terminal", "switch to slack",
+                "focus chrome", "focus spotify", "bring up finder"
+            ]
+        },
+        "open_url": {
+            "lane": "fast",
+            "action": "open_url",
+            "extract": "url",
+            "utterances": [
+                "go to gmail", "open gmail.com", "go to google",
+                "open youtube", "go to github", "open twitter",
+                "go to linkedin", "open facebook"
+            ]
+        },
+        "set_timer": {
+            "lane": "fast",
+            "action": "set_timer",
+            "extract": "duration",
+            "utterances": [
+                "timer for 5 minutes", "set timer 10 minutes",
+                "timer 30 seconds", "start timer for 15 minutes",
+                "timer for 1 hour", "set a timer for 5 minutes",
+                "timer 10 mins", "start a 5 minute timer"
+            ]
+        },
+        "set_alarm": {
+            "lane": "fast",
+            "action": "set_alarm",
+            "extract": "time",
+            "utterances": [
+                "alarm at 7am", "set alarm for 8",
+                "alarm at 6:30", "wake me up at 7",
+                "set alarm 9am", "alarm for 10pm"
+            ]
+        },
+        "calendar_event": {
+            "lane": "slow",
+            "utterances": [
+                "set calendar", "create meeting", "schedule event",
+                "add to calendar", "book meeting", "calendar event",
+                "meeting with", "schedule a call", "set up a meeting"
+            ]
+        },
+        "send_email": {
+            "lane": "slow",
+            "utterances": [
+                "send email", "email to", "draft email",
+                "compose email", "write email", "send a message to",
+                "email about"
+            ]
+        },
+        "create_draft": {
+            "lane": "slow",
+            "utterances": [
+                "create draft", "draft an email", "save as draft",
+                "write a draft"
+            ]
+        },
+        "create_doc": {
+            "lane": "slow",
+            "utterances": [
+                "create document", "new doc", "create google doc",
+                "make a document", "new document"
+            ]
+        },
+        "notion_create_page": {
+            "lane": "slow",
+            "utterances": [
+                "create notion page", "new notion page",
+                "add to notion", "notion page", "make notion page"
+            ]
+        },
+        "notion_search": {
+            "lane": "slow",
+            "utterances": [
+                "search notion", "find in notion", "look up notion",
+                "notion search"
+            ]
+        },
+        "create_reminder": {
+            "lane": "slow",
+            "utterances": [
+                "remind me", "set reminder", "create reminder",
+                "add reminder", "remember to", "don't let me forget"
+            ]
+        },
+        "search_email": {
+            "lane": "slow",
+            "utterances": [
+                "search email", "find emails", "look for email",
+                "search my inbox", "find messages about"
+            ]
+        }
+    }
+}
