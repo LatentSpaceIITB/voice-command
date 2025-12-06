@@ -5,49 +5,68 @@ from typing import Optional
 
 # Common app name mappings (what user says → actual app name)
 APP_ALIASES = {
+    # Browsers
     "chrome": "Google Chrome",
     "google chrome": "Google Chrome",
     "browser": "Google Chrome",
     "safari": "Safari",
+    "arc": "Arc",
+    "arc browser": "Arc",
+    "firefox": "Firefox",
+    "brave": "Brave Browser",
+    # System
     "finder": "Finder",
     "files": "Finder",
     "terminal": "Terminal",
     "iterm": "iTerm",
+    "warp": "Warp",
+    # Dev
     "code": "Visual Studio Code",
     "vscode": "Visual Studio Code",
     "vs code": "Visual Studio Code",
+    "cursor": "Cursor",
+    # Media
     "spotify": "Spotify",
     "music": "Music",
     "apple music": "Music",
+    # Communication
     "slack": "Slack",
     "discord": "Discord",
     "zoom": "zoom.us",
     "teams": "Microsoft Teams",
+    "whatsapp": "WhatsApp",
+    "whats app": "WhatsApp",
+    "what's app": "WhatsApp",
+    "telegram": "Telegram",
+    "messages": "Messages",
+    "imessage": "Messages",
+    "facetime": "FaceTime",
+    "mail": "Mail",
+    # Office
     "word": "Microsoft Word",
     "excel": "Microsoft Excel",
     "powerpoint": "Microsoft PowerPoint",
     "notes": "Notes",
     "reminders": "Reminders",
     "calendar": "Calendar",
-    "mail": "Mail",
-    "messages": "Messages",
-    "imessage": "Messages",
-    "whatsapp": "WhatsApp",
-    "telegram": "Telegram",
+    # Productivity
     "notion": "Notion",
     "obsidian": "Obsidian",
     "figma": "Figma",
     "photoshop": "Adobe Photoshop",
     "illustrator": "Adobe Illustrator",
     "premiere": "Adobe Premiere Pro",
+    # System
     "system preferences": "System Preferences",
-    "settings": "System Preferences",
+    "settings": "System Settings",
     "system settings": "System Settings",
     "activity monitor": "Activity Monitor",
     "app store": "App Store",
     "preview": "Preview",
     "photos": "Photos",
-    "facetime": "FaceTime",
+    # Other
+    "raycast": "Raycast",
+    "1password": "1Password",
 }
 
 

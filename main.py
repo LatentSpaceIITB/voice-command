@@ -6,9 +6,12 @@ Hold Right Command (⌘) key to record a voice command,
 release to process. Supports Google Workspace and macOS system control.
 
 Features hybrid Fast Lane / Slow Lane architecture for optimal latency:
-- Fast Lane: Local transcription + semantic routing + local execution (~350ms)
-- Slow Lane: Cloud transcription + Claude parsing + API execution (~2-3s)
+- Fast Lane: Cloud STT + semantic routing + local execution (~1s)
+- Slow Lane: Cloud STT + Claude parsing + API execution (~2-3s)
 """
+
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 import threading
 from hotkey_listener import HotkeyListener
@@ -19,11 +22,13 @@ from command_router import CommandRouter
 from tts_client import TTSClient
 from audio_feedback import feedback
 
-# Local Fast Lane components
-from local_transcriber import LocalTranscriber
+# Fast Lane components (semantic routing + local execution)
 from semantic_router import SemanticRouter
 from fast_lane_executor import FastLaneExecutor
-from config import LOCAL_WHISPER_MAX_DURATION, FAST_LANE_CONFIDENCE, FAST_LANE_FALLBACK_TO_CLOUD
+from config import FAST_LANE_CONFIDENCE, FAST_LANE_FALLBACK_TO_CLOUD
+
+# Context capture for "The Now" commands
+from context_capture import ContextCapture
 
 class VoiceCommandApp:
     """Main application orchestrating all components."""
@@ -35,16 +40,20 @@ class VoiceCommandApp:
         # Core audio components
         self.recorder = AudioRecorder()
 
-        # Local Fast Lane components
-        print("Setting up Local Fast Lane...")
-        self.local_transcriber = LocalTranscriber()
+        # Cloud transcription (OpenAI Whisper - accurate)
+        print("Setting up Cloud Whisper...")
+        self.cloud_transcriber = Transcriber()
+
+        # Fast Lane: Semantic router + local executor
+        print("Setting up Fast Lane...")
         self.semantic_router = SemanticRouter()
         self.fast_executor = FastLaneExecutor()
-        self._use_local = self.local_transcriber.is_available()
 
-        # Cloud Slow Lane components (fallback)
-        print("Setting up Cloud Slow Lane...")
-        self.cloud_transcriber = Transcriber()
+        # Context capture for contextual commands
+        self.context_capture = ContextCapture()
+
+        # Slow Lane: Claude parsing + cloud APIs
+        print("Setting up Slow Lane...")
         self.parser = IntentParser()
         self.router = CommandRouter()
 
@@ -60,15 +69,12 @@ class VoiceCommandApp:
         self._processing = False
 
         # Status
-        if self._use_local:
-            print("✓ Local Fast Lane: ENABLED (whisper.cpp)")
-        else:
-            print("✗ Local Fast Lane: DISABLED (using cloud only)")
-
+        print()
+        print("✓ Transcription: Cloud Whisper (OpenAI)")
         if self.semantic_router.is_available():
-            print("✓ Semantic Router: ENABLED (fastembed)")
+            print("✓ Fast Lane: ENABLED (semantic router + local execution)")
         else:
-            print("✗ Semantic Router: DISABLED (using Claude only)")
+            print("✗ Fast Lane: DISABLED (using Claude for all commands)")
 
     def _on_key_press(self):
         """Called when trigger key is pressed."""
@@ -101,26 +107,13 @@ class VoiceCommandApp:
                 return
 
             # ================================================================
-            # STEP 1: TRANSCRIPTION (Local or Cloud)
+            # STEP 1: TRANSCRIPTION (Cloud Whisper for accuracy)
             # ================================================================
-            text = None
-            used_local = False
-
-            # Try local transcription first for short commands
-            if self._use_local and duration < LOCAL_WHISPER_MAX_DURATION:
-                try:
-                    result = self.local_transcriber.transcribe(audio_data)
-                    if result.text and result.confidence > 0.5:
-                        text = result.text
-                        used_local = True
-                        print(f"🚀 [Local] Transcribed in {result.latency_ms:.0f}ms: '{text}'")
-                except Exception as e:
-                    print(f"⚠️  Local transcription failed: {e}")
-
-            # Fallback to cloud transcription
-            if not text:
-                text = self.cloud_transcriber.transcribe(audio_data)
-                print(f"☁️  [Cloud] Transcribed: '{text}'")
+            import time
+            start_time = time.time()
+            text = self.cloud_transcriber.transcribe(audio_data)
+            transcribe_ms = (time.time() - start_time) * 1000
+            print(f"☁️  Transcribed in {transcribe_ms:.0f}ms: '{text}'")
 
             if not text or not text.strip():
                 print("⚠️  No speech detected.")
@@ -141,9 +134,9 @@ class VoiceCommandApp:
                     self._process_fast_lane(text, route_result)
                     return
 
-                # Slow Lane or Uncertain: Use Claude
+                # Slow Lane or Uncertain: Use Claude (pass route_result for context awareness)
                 feedback.play_processing()
-                self._process_slow_lane(text)
+                self._process_slow_lane(text, route_result)
             else:
                 # No semantic router - always use slow lane
                 feedback.play_processing()
@@ -178,16 +171,31 @@ class VoiceCommandApp:
             if FAST_LANE_FALLBACK_TO_CLOUD:
                 print("⚠️  Fast Lane failed, falling back to Claude...")
                 feedback.play_processing()
-                self._process_slow_lane(text)
+                self._process_slow_lane(text, route_result)
             else:
                 feedback.play_error()
                 self.tts.speak("I couldn't complete that action.")
 
-    def _process_slow_lane(self, text: str):
+    def _process_slow_lane(self, text: str, route_result=None):
         """Process Slow Lane command through Claude API."""
         print(f"🐢 SLOW LANE: Sending to Claude...")
 
-        # Parse intent with Claude
+        # Check if this is a contextual command
+        is_contextual = route_result and route_result.route_name.startswith("contextual_")
+
+        if is_contextual:
+            # Capture current context
+            context = self.context_capture.capture()
+            if not context:
+                print("⚠️  No context available to process.")
+                self.tts.speak("I couldn't capture the context. Try selecting some text first.")
+                return
+
+            # Process contextual command with captured context
+            success = self._process_contextual_command(text, context, route_result)
+            return
+
+        # Regular slow lane processing
         intent = self.parser.parse(text)
         if not intent:
             print("⚠️  Could not parse command.")
@@ -201,6 +209,79 @@ class VoiceCommandApp:
         response = self._generate_response(intent, success)
         if response:
             self.tts.speak(response)
+
+    def _process_contextual_command(self, text: str, context, route_result) -> bool:
+        """Process a contextual command with captured context."""
+        from anthropic import Anthropic
+
+        client = Anthropic()
+
+        # Determine the action type
+        action = route_result.action
+
+        # Build the prompt based on action
+        if action == "contextual_explain":
+            task = "Explain the following in simple terms:"
+        elif action == "contextual_summarize":
+            task = "Summarize the following concisely:"
+        elif action == "contextual_reply":
+            task = "Draft a professional reply to the following:"
+        elif action == "contextual_improve":
+            task = "Improve and polish the following text:"
+        elif action == "contextual_fix":
+            task = "Identify and explain how to fix the error in:"
+        else:
+            task = f"Process this request: '{text}' for:"
+
+        # Handle image context (screenshot)
+        if context.is_image:
+            print(f"🖼️  Processing with vision model...")
+
+            response = client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=1024,
+                messages=[{
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/png",
+                                "data": context.content,
+                            },
+                        },
+                        {
+                            "type": "text",
+                            "text": f"{task}\n\nContext: {context.app_name} - {context.window_title}"
+                        }
+                    ],
+                }]
+            )
+        else:
+            # Text context
+            print(f"📝 Processing text context ({len(context.content)} chars)...")
+
+            prompt = f"{task}\n\n{context.content}\n\nContext: From {context.app_name}"
+
+            response = client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=1024,
+                messages=[{
+                    "role": "user",
+                    "content": prompt
+                }]
+            )
+
+        # Extract response text
+        result_text = response.content[0].text
+
+        print(f"\n✨ Response:\n{result_text}\n")
+
+        # Speak the response
+        self.tts.speak(result_text)
+
+        return True
 
     def _generate_fast_response(self, route_result) -> str:
         """Generate spoken response for Fast Lane actions."""

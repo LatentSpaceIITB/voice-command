@@ -332,6 +332,47 @@
                 "search email", "find emails", "look for email",
                 "search my inbox", "find messages about"
             ]
+        },
+        "contextual_explain": {
+            "lane": "slow",
+            "requires_context": true,
+            "utterances": [
+                "explain this", "what is this", "what does this mean",
+                "explain this error", "what's this", "tell me about this",
+                "explain", "what is this saying"
+            ]
+        },
+        "contextual_summarize": {
+            "lane": "slow",
+            "requires_context": true,
+            "utterances": [
+                "summarize this", "summarize", "tldr", "give me a summary",
+                "what's the summary", "brief me", "condense this"
+            ]
+        },
+        "contextual_reply": {
+            "lane": "slow",
+            "requires_context": true,
+            "utterances": [
+                "draft a reply", "reply to this", "respond to this",
+                "write a reply", "draft reply", "respond"
+            ]
+        },
+        "contextual_improve": {
+            "lane": "slow",
+            "requires_context": true,
+            "utterances": [
+                "improve this", "make this better", "enhance this",
+                "rewrite this", "polish this", "make this pop"
+            ]
+        },
+        "contextual_fix": {
+            "lane": "slow",
+            "requires_context": true,
+            "utterances": [
+                "fix this", "correct this", "debug this",
+                "fix this error", "what's wrong", "help me fix this"
+            ]
         }
     }
 }
