@@ -19,7 +19,7 @@ struct VoiceHUDApp: App {
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     var hudWindow: HUDWindow?
-    var wsClient: WebSocketClient?
+    var wsClient: HUDWebSocketClient?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Hide from dock
@@ -29,7 +29,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         hudWindow = HUDWindow()
 
         // Connect to Python backend
-        wsClient = WebSocketClient(hudWindow: hudWindow!)
+        wsClient = HUDWebSocketClient(hudWindow: hudWindow!)
         wsClient?.connect()
 
         print("VoiceHUD started - connecting to ws://localhost:8765")
@@ -398,7 +398,7 @@ extension Notification.Name {
     static let hudAction = Notification.Name("hudAction")
 }
 
-class WebSocketClient: WebSocketDelegate {
+class HUDWebSocketClient: WebSocketDelegate {
     private var socket: WebSocket?
     private weak var hudWindow: HUDWindow?
     private var isConnected = false
@@ -485,7 +485,7 @@ class WebSocketClient: WebSocketDelegate {
 
     // MARK: - WebSocketDelegate
 
-    func didReceive(event: WebSocketEvent, client: WebSocketClient) {
+    func didReceive(event: WebSocketEvent, client: any Starscream.WebSocketClient) {
         switch event {
         case .connected:
             print("WebSocket connected")
