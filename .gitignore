@@ -3,3 +3,5 @@
 .env.local
 .env.*
 !.env.example  # allow only example file
+.env
+.env.example
